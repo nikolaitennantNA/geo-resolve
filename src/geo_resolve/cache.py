@@ -55,5 +55,24 @@ class GeoCache:
         row = self._conn.execute("SELECT COUNT(*), COUNT(lat) FROM cache").fetchone()
         return {"total": row[0], "with_coords": row[1], "without_coords": row[0] - row[1]}
 
+    def clear(self, provider: str | None = None, failures_only: bool = False) -> int:
+        """Clear cache entries. Returns number of rows deleted.
+
+        Args:
+            provider: Only clear entries for this provider. None = all.
+            failures_only: Only clear entries where lat/lon is NULL (failed lookups).
+        """
+        conditions = []
+        params: list = []
+        if provider:
+            conditions.append("provider = ?")
+            params.append(provider)
+        if failures_only:
+            conditions.append("lat IS NULL")
+        where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+        cursor = self._conn.execute(f"DELETE FROM cache{where}", params)
+        self._conn.commit()
+        return cursor.rowcount
+
     def close(self):
         self._conn.close()

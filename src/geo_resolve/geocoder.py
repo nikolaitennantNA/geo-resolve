@@ -244,6 +244,16 @@ class Geocoder:
     def cache_stats(self) -> dict | None:
         return self._cache.stats() if self._cache else None
 
+    def clear_cache(self, failures_only: bool = False) -> int:
+        """Clear cached entries. Returns count deleted.
+
+        Args:
+            failures_only: Only clear failed lookups (lat/lon is NULL).
+        """
+        if not self._cache:
+            return 0
+        return self._cache.clear(provider=self._provider.name, failures_only=failures_only)
+
     @property
     def provider_name(self) -> str:
         return self._provider.name

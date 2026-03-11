@@ -109,10 +109,12 @@ uv run geo-resolve --help
 All results cached in SQLite at `~/.cache/geo-resolve/geocode.db`. Same address + provider combo is never re-requested. Re-runs and retries are instant.
 
 ```python
-gc.cache_stats  # {'total': 693, 'with_coords': 693, 'without_coords': 0}
+gc.cache_stats                               # {'total': 693, 'with_coords': 693, 'without_coords': 0}
+gc.clear_cache()                             # clear all cached entries for this provider
+gc.clear_cache(failures_only=True)           # clear only failed lookups (re-try them next run)
 
-Geocoder(cache=False)                        # disable
-Geocoder(cache_path="/path/to/cache.db")     # custom location
+Geocoder(cache=False)                        # disable cache entirely
+Geocoder(cache_path="/path/to/cache.db")     # custom cache location
 ```
 
 ## Adding a provider
@@ -137,6 +139,16 @@ class MyProvider(GeoProvider):
 gc = Geocoder(provider=MyProvider())
 
 # Or add to PROVIDERS dict in providers/__init__.py to use by name
+```
+
+## Tests
+
+```bash
+# Unit tests (no API calls)
+uv run pytest tests/ -k "not Integration"
+
+# Integration tests (requires GOOGLE_MAPS_API_KEY in env)
+uv run pytest tests/ -v
 ```
 
 ## All constructor options
