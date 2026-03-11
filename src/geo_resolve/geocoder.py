@@ -7,13 +7,13 @@ import os
 import time
 from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 from geo_resolve.cache import GeoCache
 from geo_resolve.providers import PROVIDERS, GeoProvider
 from geo_resolve.providers.base import GeoResult
 
-load_dotenv()
+load_dotenv(find_dotenv(usecwd=True))
 
 
 class Geocoder:
