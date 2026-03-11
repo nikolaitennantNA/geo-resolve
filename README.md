@@ -26,25 +26,67 @@ lat, lon = gc.geocode("Jl. Pemuda No.62, Semarang, Indonesia")
 ## Providers
 
 All Google providers use the same key (`GOOGLE_MAPS_API_KEY` or `GOOGLE_PLACES_API_KEY`).
+Google Places and Validation need to be enabled separately in your [Google Cloud Console](https://console.cloud.google.com/apis/library).
 
-| Provider | Env var | Cost | Rate | What it does |
-|---|---|---|---|---|
-| `google` | `GOOGLE_MAPS_API_KEY` | $5/1K | 50 QPS | Address → coords (standard geocoding) |
-| `google_places` | `GOOGLE_MAPS_API_KEY` | $32/1K | 50 QPS | Query → business listing + coords + address |
-| `google_validation` | `GOOGLE_MAPS_API_KEY` | $17/1K | 50 QPS | Validates/corrects address + returns coords |
-| `nominatim` | None | Free | 1/sec | OpenStreetMap geocoding, no key needed |
-| `opencage` | `OPENCAGE_API_KEY` | Free: 2,500/day | 1/sec | Multi-source geocoding |
-| `locationiq` | `LOCATIONIQ_API_KEY` | Free: 5,000/day | 2/sec | Nominatim-based with higher limits |
+### Address geocoding (input: street address)
+
+These take a **street address** and return coordinates.
+
+| Provider | Env var | Cost | Rate |
+|---|---|---|---|
+| `google` | `GOOGLE_MAPS_API_KEY` | $5/1K | 50 QPS |
+| `nominatim` | None | Free | 1/sec |
+| `opencage` | `OPENCAGE_API_KEY` | Free: 2,500/day | 1/sec |
+| `locationiq` | `LOCATIONIQ_API_KEY` | Free: 5,000/day | 2/sec |
 
 ```python
-gc = Geocoder(provider="google")              # address → coords
-gc = Geocoder(provider="google_places")       # finds business by name
-gc = Geocoder(provider="google_validation")   # cleans up messy addresses
-gc = Geocoder(provider="nominatim")           # free, no key needed
-gc = Geocoder(provider="opencage")
-gc = Geocoder(provider="locationiq")
+gc = Geocoder(provider="google")
+lat, lon = gc.geocode("Jl. Pemuda No.62, Semarang, Indonesia")
+```
 
-# Or let it auto-select (picks first provider with a valid key)
+### Business / POI search (input: search query, NOT an address)
+
+`google_places` uses **Google Places Text Search**. Pass it a search query like you would type into Google Maps — a business name, a landmark, a place + city. It returns the business listing with coords, formatted address, and name.
+
+**Do NOT pass a street address** — use `google` for that. Places is for finding a business/location by name.
+
+| Provider | Env var | Cost | Rate |
+|---|---|---|---|
+| `google_places` | `GOOGLE_MAPS_API_KEY` | $32/1K | 50 QPS |
+
+```python
+gc = Geocoder(provider="google_places")
+
+# Good — search queries:
+lat, lon = gc.geocode("Bank BRI Semarang")
+lat, lon = gc.geocode("Boral Concrete Plant Cairns")
+lat, lon = gc.geocode("Ørsted Hornsea Wind Farm")
+
+# Bad — this is an address, use provider="google" instead:
+# lat, lon = gc.geocode("Jl. Pemuda No.62, Semarang")
+```
+
+### Address validation (input: messy/partial address)
+
+`google_validation` uses **Google Address Validation API**. Pass it a messy or partial address and it returns a corrected, standardized address + coordinates. Best for cleaning up bad data.
+
+| Provider | Env var | Cost | Rate |
+|---|---|---|---|
+| `google_validation` | `GOOGLE_MAPS_API_KEY` | $17/1K | 50 QPS |
+
+```python
+gc = Geocoder(provider="google_validation", country_bias="id")
+
+# Corrects and standardizes messy addresses
+lat, lon = gc.geocode("jl pemuda 62 semarang jateng")
+result = gc.geocode_full("jl pemuda 62 semarang jateng")
+result.display_name  # "Jl. Pemuda No.62, Semarang, Jawa Tengah 50133, Indonesia"
+```
+
+### Auto-select
+
+```python
+# Picks first provider with a valid key (google > nominatim)
 gc = Geocoder()
 ```
 
