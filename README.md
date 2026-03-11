@@ -5,9 +5,13 @@ Provider-agnostic geocoding with persistent cache, rate limiting, and batch supp
 ## Install
 
 ```bash
-pip install git+https://github.com/nikolaitennantNA/geo-resolve
-# or with pandas support
-pip install "geo-resolve[pandas] @ git+https://github.com/nikolaitennantNA/geo-resolve"
+# Add to a project
+uv add git+https://github.com/nikolaitennantNA/geo-resolve
+# with pandas support
+uv add "geo-resolve[pandas] @ git+https://github.com/nikolaitennantNA/geo-resolve"
+
+# Or install directly
+uv pip install git+https://github.com/nikolaitennantNA/geo-resolve
 ```
 
 ## Quick start
@@ -37,9 +41,9 @@ df = gc.geocode_df(df, address_col="address", lat_col="latitude", lon_col="longi
 ## CLI
 
 ```bash
-geo-resolve input.csv output.csv
-geo-resolve input.csv output.csv --provider google --country id
-geo-resolve input.csv output.csv --address-col addr --lat-col lat --lon-col lng
+uv run geo-resolve input.csv output.csv
+uv run geo-resolve input.csv output.csv --provider google --country id
+uv run geo-resolve input.csv output.csv --address-col addr --lat-col lat --lon-col lng
 ```
 
 ## Providers
