@@ -2,11 +2,14 @@
 
 Provider-agnostic geocoding with persistent cache, rate limiting, and batch support.
 
+Set the API key in your env, pass the provider name, done.
+
 ## Install
 
 ```bash
 # Add to a project
 uv add git+https://github.com/nikolaitennantNA/geo-resolve
+
 # with pandas support
 uv add "geo-resolve[pandas] @ git+https://github.com/nikolaitennantNA/geo-resolve"
 
@@ -19,19 +22,38 @@ uv pip install git+https://github.com/nikolaitennantNA/geo-resolve
 ```python
 from geo_resolve import Geocoder
 
-gc = Geocoder()  # auto-selects provider from env vars
-lat, lon = gc.geocode("Jl. Pemuda No.62, Semarang, Indonesia")
+# Just pass the provider name — it reads the API key from env automatically
+gc = Geocoder(provider="google")
+gc = Geocoder(provider="nominatim")    # free, no key needed
+gc = Geocoder(provider="opencage")
+gc = Geocoder(provider="locationiq")
 
-# Explicit provider
+# Or let it auto-select (picks first provider with a valid key)
+gc = Geocoder()
+
+lat, lon = gc.geocode("Jl. Pemuda No.62, Semarang, Indonesia")
+# (-6.9739, 110.4203)
+
+# Country bias for better results
 gc = Geocoder(provider="google", country_bias="id")
-gc = Geocoder(provider="nominatim")
 ```
+
+## Providers
+
+| Provider | Env var | Cost | Rate limit |
+|---|---|---|---|
+| `google` | `GOOGLE_MAPS_API_KEY` | $5/1K (first $200/mo free) | 50 QPS |
+| `nominatim` | None needed | Free | 1/sec |
+| `opencage` | `OPENCAGE_API_KEY` | Free tier: 2,500/day | 1/sec |
+| `locationiq` | `LOCATIONIQ_API_KEY` | Free tier: 5,000/day | 2/sec |
+
+Just set the env var and pass the name. That's it.
 
 ## Batch geocoding
 
 ```python
-# CSV file → CSV file (with incremental saves)
-gc = Geocoder(country_bias="id")
+# CSV → CSV (incremental saves, resumable via cache)
+gc = Geocoder(provider="google", country_bias="id")
 gc.geocode_csv("input.csv", "output.csv", address_col="address")
 
 # pandas DataFrame
@@ -42,63 +64,52 @@ df = gc.geocode_df(df, address_col="address", lat_col="latitude", lon_col="longi
 
 ```bash
 uv run geo-resolve input.csv output.csv
-uv run geo-resolve input.csv output.csv --provider google --country id
+uv run geo-resolve input.csv output.csv -p google -c id
 uv run geo-resolve input.csv output.csv --address-col addr --lat-col lat --lon-col lng
 ```
 
-## Providers
-
-| Provider | API key env var | Cost | Rate limit | Best for |
-|---|---|---|---|---|
-| **Google Geocoding** | `GOOGLE_MAPS_API_KEY` | $5/1K requests (first $200/mo free) | 50 QPS | Street-level accuracy, global coverage |
-| **Nominatim (OSM)** | None needed | Free | 1 req/sec | Bulk jobs where cost matters |
-
-Auto-selection: Google if `GOOGLE_MAPS_API_KEY` is set, otherwise Nominatim.
-
 ## Persistent cache
 
-All results are cached in SQLite at `~/.cache/geo-resolve/geocode.db`. Same address + provider combo is never re-requested — re-runs are instant.
+All results cached in SQLite at `~/.cache/geo-resolve/geocode.db`. Same address + provider is never re-requested. Re-runs are instant.
 
 ```python
-gc = Geocoder()
-print(gc.cache_stats)  # {'total': 693, 'with_coords': 693, 'without_coords': 0}
+gc.cache_stats  # {'total': 693, 'with_coords': 693, 'without_coords': 0}
 
-# Disable cache
-gc = Geocoder(cache=False)
-
-# Custom cache location
-gc = Geocoder(cache_path="/path/to/cache.db")
+Geocoder(cache=False)                        # disable
+Geocoder(cache_path="/path/to/cache.db")     # custom location
 ```
 
-## Adding a provider
+## Adding a new provider
 
-Subclass `GeoProvider` and register it:
+One file, ~40 lines. Subclass `GeoProvider`:
 
 ```python
 from geo_resolve.providers.base import GeoProvider, GeoResult
 
 class MyProvider(GeoProvider):
     name = "my_provider"
-    default_rate_limit = 0.5  # seconds between requests
+    default_rate_limit = 0.5
 
     def is_configured(self) -> bool:
-        return True
+        return bool(os.getenv("MY_PROVIDER_API_KEY"))
 
     def geocode(self, address: str, **kwargs) -> GeoResult:
-        # Your geocoding logic here
-        return GeoResult(lat=..., lon=..., provider=self.name)
+        # Call your API, return GeoResult(lat=..., lon=..., provider=self.name)
+        ...
 
-# Use directly
+# Use it
 gc = Geocoder(provider=MyProvider())
 ```
 
-## Configuration
+Or add it to `providers/__init__.py` → `PROVIDERS` dict to use by name.
+
+## All options
 
 | Parameter | Default | Description |
 |---|---|---|
-| `provider` | Auto | `"google"`, `"nominatim"`, or a `GeoProvider` instance |
-| `cache` | `True` | Enable persistent SQLite cache |
-| `cache_path` | `~/.cache/geo-resolve/geocode.db` | Custom cache location |
-| `country_bias` | `None` | ISO country code to bias results (e.g. `"id"` for Indonesia) |
+| `provider` | Auto | `"google"`, `"nominatim"`, `"opencage"`, `"locationiq"`, or a `GeoProvider` instance |
+| `cache` | `True` | Persistent SQLite cache |
+| `cache_path` | `~/.cache/geo-resolve/geocode.db` | Custom cache path |
+| `country_bias` | `None` | ISO country code (e.g. `"id"`, `"gb"`, `"us"`) |
 | `rate_limit` | Provider default | Override seconds between requests |
 | `verbose` | `True` | Print progress |
