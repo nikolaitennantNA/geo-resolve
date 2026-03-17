@@ -32,12 +32,12 @@ Google Places and Validation need to be enabled separately in your [Google Cloud
 
 These take a **street address** and return coordinates.
 
-| Provider | Env var | Cost | Rate |
-|---|---|---|---|
-| `google` | `GOOGLE_MAPS_API_KEY` | $5/1K | 50 QPS |
-| `nominatim` | None | Free | 1/sec |
-| `opencage` | `OPENCAGE_API_KEY` | Free: 2,500/day | 1/sec |
-| `locationiq` | `LOCATIONIQ_API_KEY` | Free: 5,000/day | 2/sec |
+| Provider       | Env var                 | Cost            | Rate   |
+| -------------- | ----------------------- | --------------- | ------ |
+| `google`     | `GOOGLE_MAPS_API_KEY` | $5/1K           | 50 QPS |
+| `nominatim`  | None                    | Free            | 1/sec  |
+| `opencage`   | `OPENCAGE_API_KEY`    | Free: 2,500/day | 1/sec  |
+| `locationiq` | `LOCATIONIQ_API_KEY`  | Free: 5,000/day | 2/sec  |
 
 ```python
 gc = Geocoder(provider="google")
@@ -50,8 +50,8 @@ lat, lon = gc.geocode("Jl. Pemuda No.62, Semarang, Indonesia")
 
 **Do NOT pass a street address** — use `google` for that. Places is for finding a business/location by name.
 
-| Provider | Env var | Cost | Rate |
-|---|---|---|---|
+| Provider          | Env var                 | Cost   | Rate   |
+| ----------------- | ----------------------- | ------ | ------ |
 | `google_places` | `GOOGLE_MAPS_API_KEY` | $32/1K | 50 QPS |
 
 ```python
@@ -70,8 +70,8 @@ lat, lon = gc.geocode("Ørsted Hornsea Wind Farm")
 
 `google_validation` uses **Google Address Validation API**. Pass it a messy or partial address and it returns a corrected, standardized address + coordinates. Best for cleaning up bad data.
 
-| Provider | Env var | Cost | Rate |
-|---|---|---|---|
+| Provider              | Env var                 | Cost   | Rate   |
+| --------------------- | ----------------------- | ------ | ------ |
 | `google_validation` | `GOOGLE_MAPS_API_KEY` | $17/1K | 50 QPS |
 
 ```python
@@ -134,17 +134,17 @@ uv run geo-resolve input.csv output.csv --address-col addr --lat-col lat --lon-c
 uv run geo-resolve --help
 ```
 
-| CLI flag | Default | Description |
-|---|---|---|
-| `-p`, `--provider` | Auto | Provider name |
-| `-c`, `--country` | None | Country bias (ISO code) |
-| `-f`, `--format` | Auto from extension | `csv` or `json` |
-| `--address-col` | `address` | Address column name |
-| `--lat-col` | `latitude` | Latitude column name |
-| `--lon-col` | `longitude` | Longitude column name |
-| `--no-cache` | False | Disable persistent cache |
-| `--save-every` | 50 | Incremental save interval |
-| `-q`, `--quiet` | False | Suppress output |
+| CLI flag               | Default             | Description               |
+| ---------------------- | ------------------- | ------------------------- |
+| `-p`, `--provider` | Auto                | Provider name             |
+| `-c`, `--country`  | None                | Country bias (ISO code)   |
+| `-f`, `--format`   | Auto from extension | `csv` or `json`       |
+| `--address-col`      | `address`         | Address column name       |
+| `--lat-col`          | `latitude`        | Latitude column name      |
+| `--lon-col`          | `longitude`       | Longitude column name     |
+| `--no-cache`         | False               | Disable persistent cache  |
+| `--save-every`       | 50                  | Incremental save interval |
+| `-q`, `--quiet`    | False               | Suppress output           |
 
 ## Persistent cache
 
@@ -195,11 +195,11 @@ uv run pytest tests/ -v
 
 ## All constructor options
 
-| Parameter | Default | Description |
-|---|---|---|
-| `provider` | Auto | Provider name string or `GeoProvider` instance |
-| `cache` | `True` | Persistent SQLite cache |
-| `cache_path` | `~/.cache/geo-resolve/geocode.db` | Custom cache path |
-| `country_bias` | `None` | ISO country code (e.g. `"id"`, `"gb"`, `"us"`) |
-| `rate_limit` | Provider default | Override seconds between requests |
-| `verbose` | `True` | Print progress |
+| Parameter        | Default                             | Description                                         |
+| ---------------- | ----------------------------------- | --------------------------------------------------- |
+| `provider`     | Auto                                | Provider name string or `GeoProvider` instance    |
+| `cache`        | `True`                            | Persistent SQLite cache                             |
+| `cache_path`   | `~/.cache/geo-resolve/geocode.db` | Custom cache path                                   |
+| `country_bias` | `None`                            | ISO country code (e.g.`"id"`, `"gb"`, `"us"`) |
+| `rate_limit`   | Provider default                    | Override seconds between requests                   |
+| `verbose`      | `True`                            | Print progress                                      |
